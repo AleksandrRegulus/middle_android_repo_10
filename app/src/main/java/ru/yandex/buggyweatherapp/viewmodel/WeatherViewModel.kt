@@ -4,11 +4,14 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.yandex.buggyweatherapp.WeatherApplication
 import ru.yandex.buggyweatherapp.model.Location
@@ -29,10 +32,9 @@ class WeatherViewModel : ViewModel() {
     private val locationRepository by lazy { 
         LocationRepository(activityContext)
     }
-    
-    
+
     val weatherData = MutableLiveData<WeatherData>()
-    val currentLocation = MutableLiveData<Location>()
+    private val currentLocation = MutableLiveData<Location>(null)
     val isLoading = MutableLiveData<Boolean>()
     val error = MutableLiveData<String>()
     val cityName = MutableLiveData<String>()
@@ -41,14 +43,10 @@ class WeatherViewModel : ViewModel() {
     private val coroutineScope = CoroutineScope(Dispatchers.Main + Job())
     
     
-    private var refreshTimer: Timer? = null
-    
-    
     fun initialize(context: Context) {
         this.activityContext = context
         fetchCurrentLocationWeather()
-        
-        
+
         startAutoRefresh()
     }
     
@@ -130,14 +128,14 @@ class WeatherViewModel : ViewModel() {
     
     
     private fun startAutoRefresh() {
-        refreshTimer = Timer()
-        refreshTimer?.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
+        viewModelScope.launch {
+            while (true) {
+                delay(TIMER_REFRESH_WEATHER)
                 currentLocation.value?.let { location ->
                     getWeatherForLocation(location)
                 }
             }
-        }, 60000, 60000)
+        }
     }
     
     
@@ -153,5 +151,9 @@ class WeatherViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         
+    }
+
+    companion object {
+        private const val TIMER_REFRESH_WEATHER = 60000L
     }
 }
