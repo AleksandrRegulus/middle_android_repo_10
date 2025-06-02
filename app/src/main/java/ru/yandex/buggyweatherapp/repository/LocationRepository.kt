@@ -23,17 +23,8 @@ class LocationRepository(
         LocationServices.getFusedLocationProviderClient(context)
     
     
-    private var currentLocation: Location? = null
-    
-    
-    private var locationCallback: ((Location?) -> Unit)? = null
-    
-    
     fun getCurrentLocation(callback: (Location?) -> Unit) {
         try {
-            locationCallback = callback
-            
-            
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location ->
                     if (location != null) {
@@ -41,10 +32,8 @@ class LocationRepository(
                             latitude = location.latitude,
                             longitude = location.longitude
                         )
-                        currentLocation = userLocation
                         callback(userLocation)
                     } else {
-                        
                         requestLocationUpdates(callback)
                     }
                 }
@@ -73,7 +62,6 @@ class LocationRepository(
                             latitude = location.latitude,
                             longitude = location.longitude
                         )
-                        currentLocation = userLocation
                         callback(userLocation)
                         
                         
