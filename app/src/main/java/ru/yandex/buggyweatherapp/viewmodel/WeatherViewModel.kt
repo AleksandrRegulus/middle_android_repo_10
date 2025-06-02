@@ -33,16 +33,14 @@ class WeatherViewModel : ViewModel() {
         LocationRepository(activityContext)
     }
 
+
     val weatherData = MutableLiveData<WeatherData>()
     private val currentLocation = MutableLiveData<Location>(null)
     val isLoading = MutableLiveData<Boolean>()
     val error = MutableLiveData<String>()
     val cityName = MutableLiveData<String>()
     
-    
-    private val coroutineScope = CoroutineScope(Dispatchers.Main + Job())
-    
-    
+
     fun initialize(context: Context) {
         this.activityContext = context
         fetchCurrentLocationWeather()
@@ -120,7 +118,7 @@ class WeatherViewModel : ViewModel() {
     
     
     fun loadWeatherIcon(iconCode: String) {
-        coroutineScope.launch {
+        viewModelScope.launch {
             val iconUrl = "https://openweathermap.org/img/wn/$iconCode@2x.png"
             ImageLoader.loadImage(iconUrl)
         }
