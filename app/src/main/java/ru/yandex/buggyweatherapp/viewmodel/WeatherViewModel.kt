@@ -1,8 +1,6 @@
 package ru.yandex.buggyweatherapp.viewmodel
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -58,18 +56,17 @@ class WeatherViewModel : ViewModel() {
 
         weatherRepository.getWeatherData(location) { data, exception ->
 
-            Handler(Looper.getMainLooper()).post {
-                if (data != null) {
-                    renderState(WeatherState.Content(data))
-                } else {
-                    renderState(WeatherState.Error(exception?.message ?: "Unknown error"))
-                }
+            if (data != null) {
+                renderState(WeatherState.Content(data))
+            } else {
+                renderState(WeatherState.Error(exception?.message ?: "Unknown error"))
             }
         }
     }
 
     fun searchWeatherByCity(city: String) {
         if (city.isBlank()) {
+            currentLocation = null
             renderState(WeatherState.Error("City name cannot be empty"))
             return
         }
