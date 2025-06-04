@@ -92,7 +92,7 @@ fun WeatherScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
                 WeatherCard(
                     weather = screenState.weatherData,
                     onFavoriteClick = { viewModel.toggleFavorite() },
-                    onRefreshClick = { viewModel.fetchCurrentLocationWeather() }
+                    onRefreshClick = { viewModel.refreshWeather() }
                 )
             }
 

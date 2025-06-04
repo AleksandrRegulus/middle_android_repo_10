@@ -18,13 +18,13 @@ import ru.yandex.buggyweatherapp.repository.WeatherRepository
 import ru.yandex.buggyweatherapp.utils.ImageLoader
 
 class WeatherViewModel : ViewModel() {
-    
-    
+
+
     private lateinit var activityContext: Context
-    
-    
+
+
     private val weatherRepository = WeatherRepository()
-    private val locationRepository by lazy { 
+    private val locationRepository by lazy {
         LocationRepository(activityContext)
     }
 
@@ -32,34 +32,32 @@ class WeatherViewModel : ViewModel() {
     val weatherScreenState: StateFlow<WeatherState> = _weatherScreenState
 
     private val weatherData = MutableLiveData<WeatherData?>()
-    private val currentLocation = MutableLiveData<Location>(null)
+    private var currentLocation: Location? = null
 
     fun initialize(context: Context) {
         this.activityContext = context
         fetchCurrentLocationWeather()
-
         startAutoRefresh()
     }
-    
-    
-    fun fetchCurrentLocationWeather() {
+
+    private fun fetchCurrentLocationWeather() {
         renderState(WeatherState.Loading)
 
         locationRepository.getCurrentLocation { location ->
             if (location != null) {
-                currentLocation.value = location
+                currentLocation = location
                 getWeatherForLocation(location)
             } else {
                 renderState(WeatherState.Error("Unable to get current location"))
             }
         }
     }
-    
+
     private fun getWeatherForLocation(location: Location) {
         renderState(WeatherState.Loading)
-        
+
         weatherRepository.getWeatherData(location) { data, exception ->
-            
+
             Handler(Looper.getMainLooper()).post {
                 if (data != null) {
                     renderState(WeatherState.Content(data))
@@ -69,54 +67,58 @@ class WeatherViewModel : ViewModel() {
             }
         }
     }
-    
+
     fun searchWeatherByCity(city: String) {
         if (city.isBlank()) {
             renderState(WeatherState.Error("City name cannot be empty"))
             return
         }
         renderState(WeatherState.Loading)
-        
+
         weatherRepository.getWeatherByCity(city) { data, exception ->
             if (data != null) {
                 renderState(WeatherState.Content(data))
-                currentLocation.value = Location(0.0, 0.0, data.cityName)
+                currentLocation = Location(0.0, 0.0, data.cityName)
             } else {
                 renderState(WeatherState.Error(exception?.message ?: "Unknown error"))
             }
         }
     }
-    
-    
+
+    fun refreshWeather() {
+        currentLocation?.let { location ->
+            location.name?.let { searchWeatherByCity(it) } ?: getWeatherForLocation(location)
+        }
+    }
+
+
     fun formatTemperature(temp: Double): String {
         return "${temp.toInt()}°C"
     }
-    
-    
+
+
     fun loadWeatherIcon(iconCode: String) {
         viewModelScope.launch {
             val iconUrl = "https://openweathermap.org/img/wn/$iconCode@2x.png"
             ImageLoader.loadImage(iconUrl)
         }
     }
-    
-    
+
+
     private fun startAutoRefresh() {
         viewModelScope.launch {
             while (true) {
                 delay(TIMER_REFRESH_WEATHER)
-                currentLocation.value?.let { location ->
-                    getWeatherForLocation(location)
-                }
+                refreshWeather()
             }
         }
     }
-    
-    
+
+
     fun toggleFavorite() {
         weatherData.value?.let {
             it.isFavorite = !it.isFavorite
-            
+
             weatherData.value = it
         }
     }
@@ -124,11 +126,11 @@ class WeatherViewModel : ViewModel() {
     private fun renderState(state: WeatherState) {
         _weatherScreenState.update { state }
     }
-    
-    
+
+
     override fun onCleared() {
         super.onCleared()
-        
+
     }
 
     companion object {
