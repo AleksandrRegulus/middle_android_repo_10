@@ -3,24 +3,19 @@ package ru.yandex.buggyweatherapp.viewmodel
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.yandex.buggyweatherapp.WeatherApplication
 import ru.yandex.buggyweatherapp.model.Location
 import ru.yandex.buggyweatherapp.model.WeatherData
 import ru.yandex.buggyweatherapp.repository.LocationRepository
 import ru.yandex.buggyweatherapp.repository.WeatherRepository
 import ru.yandex.buggyweatherapp.utils.ImageLoader
-import java.util.Timer
-import java.util.TimerTask
 
 class WeatherViewModel : ViewModel() {
     
@@ -33,13 +28,11 @@ class WeatherViewModel : ViewModel() {
         LocationRepository(activityContext)
     }
 
+    private val _weatherScreenState = MutableStateFlow<WeatherState>(WeatherState.Start)
+    val weatherScreenState: StateFlow<WeatherState> = _weatherScreenState
 
-    val weatherData = MutableLiveData<WeatherData>()
+    private val weatherData = MutableLiveData<WeatherData?>()
     private val currentLocation = MutableLiveData<Location>(null)
-    val isLoading = MutableLiveData<Boolean>()
-    val error = MutableLiveData<String>()
-    val cityName = MutableLiveData<String>()
-    
 
     fun initialize(context: Context) {
         this.activityContext = context
@@ -50,38 +43,28 @@ class WeatherViewModel : ViewModel() {
     
     
     fun fetchCurrentLocationWeather() {
-        isLoading.value = true
-        error.value = null
-        
+        renderState(WeatherState.Loading)
+
         locationRepository.getCurrentLocation { location ->
             if (location != null) {
                 currentLocation.value = location
-                
-                
-                val cityNameFromLocation = locationRepository.getCityNameFromLocation(location)
-                cityName.value = cityNameFromLocation
-                
                 getWeatherForLocation(location)
             } else {
-                isLoading.value = false
-                error.value = "Unable to get current location"
+                renderState(WeatherState.Error("Unable to get current location"))
             }
         }
     }
     
-    fun getWeatherForLocation(location: Location) {
-        isLoading.value = true
-        error.value = null
+    private fun getWeatherForLocation(location: Location) {
+        renderState(WeatherState.Loading)
         
         weatherRepository.getWeatherData(location) { data, exception ->
             
             Handler(Looper.getMainLooper()).post {
-                isLoading.value = false
-                
                 if (data != null) {
-                    weatherData.value = data
+                    renderState(WeatherState.Content(data))
                 } else {
-                    error.value = exception?.message ?: "Unknown error"
+                    renderState(WeatherState.Error(exception?.message ?: "Unknown error"))
                 }
             }
         }
@@ -89,24 +72,17 @@ class WeatherViewModel : ViewModel() {
     
     fun searchWeatherByCity(city: String) {
         if (city.isBlank()) {
-            error.value = "City name cannot be empty"
+            renderState(WeatherState.Error("City name cannot be empty"))
             return
         }
-        
-        isLoading.value = true
-        error.value = null
-        
+        renderState(WeatherState.Loading)
         
         weatherRepository.getWeatherByCity(city) { data, exception ->
-            
-            isLoading.value = false
-            
             if (data != null) {
-                weatherData.value = data
-                cityName.value = data.cityName
+                renderState(WeatherState.Content(data))
                 currentLocation.value = Location(0.0, 0.0, data.cityName)
             } else {
-                error.value = exception?.message ?: "Unknown error"
+                renderState(WeatherState.Error(exception?.message ?: "Unknown error"))
             }
         }
     }
@@ -143,6 +119,10 @@ class WeatherViewModel : ViewModel() {
             
             weatherData.value = it
         }
+    }
+
+    private fun renderState(state: WeatherState) {
+        _weatherScreenState.update { state }
     }
     
     
