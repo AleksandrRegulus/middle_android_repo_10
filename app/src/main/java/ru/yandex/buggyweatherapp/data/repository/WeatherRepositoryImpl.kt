@@ -9,41 +9,26 @@ import ru.yandex.buggyweatherapp.data.model.Location
 import ru.yandex.buggyweatherapp.data.model.WeatherData
 import ru.yandex.buggyweatherapp.ui.api.WeatherRepository
 
-class WeatherRepositoryImpl: WeatherRepository {
+class WeatherRepositoryImpl : WeatherRepository {
 
     private val weatherApi = RetrofitInstance.weatherApi
 
     override fun getWeatherData(location: Location, callback: (WeatherData?, Exception?) -> Unit) {
-        weatherApi.getCurrentWeather(location.latitude, location.longitude).enqueue(
-            object : Callback<JsonObject> {
-                override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
-                    if (response.isSuccessful && response.body() != null) {
-                        try {
-                            val weatherData = parseWeatherData(response.body()!!, location)
-                            callback(weatherData, null)
-                        } catch (e: Exception) {
-                            callback(null, e)
-                        }
-                    } else {
-                        callback(null, Exception("Error fetching weather data"))
-                    }
-                }
-
-                override fun onFailure(call: Call<JsonObject>, t: Throwable) {
-                    callback(null, Exception(t))
-                }
-            }
-        )
+        weatherApi.getCurrentWeather(location.latitude, location.longitude)
+            .enqueue(createWeatherCallback(callback))
     }
 
     override fun getWeatherByCity(cityName: String, callback: (WeatherData?, Exception?) -> Unit) {
-        weatherApi.getWeatherByCity(cityName).enqueue(object : Callback<JsonObject> {
+        weatherApi.getWeatherByCity(cityName)
+            .enqueue(createWeatherCallback(callback))
+    }
+
+    private fun createWeatherCallback(callback: (WeatherData?, Exception?) -> Unit): Callback<JsonObject> {
+        return object : Callback<JsonObject> {
             override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
                 if (response.isSuccessful && response.body() != null) {
                     try {
-                        val json = response.body()!!
-                        val location = extractLocationFromResponse(json)
-                        val weatherData = parseWeatherData(json, location)
+                        val weatherData = parseWeatherData(response.body()!!)
                         callback(weatherData, null)
                     } catch (e: Exception) {
                         callback(null, e)
@@ -56,11 +41,10 @@ class WeatherRepositoryImpl: WeatherRepository {
             override fun onFailure(call: Call<JsonObject>, t: Throwable) {
                 callback(null, Exception(t))
             }
-        })
+        }
     }
 
-
-    private fun parseWeatherData(json: JsonObject, location: Location): WeatherData {
+    private fun parseWeatherData(json: JsonObject): WeatherData {
 
         val main = json.getAsJsonObject("main")
         val wind = json.getAsJsonObject("wind")
