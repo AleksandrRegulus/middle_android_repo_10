@@ -1,6 +1,6 @@
-package ru.yandex.buggyweatherapp.viewmodel
+package ru.yandex.buggyweatherapp.ui.viewmodel
 
-import ru.yandex.buggyweatherapp.model.WeatherData
+import ru.yandex.buggyweatherapp.data.model.WeatherData
 
 sealed interface WeatherState {
 

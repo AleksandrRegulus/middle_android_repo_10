@@ -1,30 +1,25 @@
-package ru.yandex.buggyweatherapp.repository
+package ru.yandex.buggyweatherapp.data.repository
 
 import com.google.gson.JsonObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import ru.yandex.buggyweatherapp.api.RetrofitInstance
-import ru.yandex.buggyweatherapp.model.Location
-import ru.yandex.buggyweatherapp.model.WeatherData
+import ru.yandex.buggyweatherapp.data.api.RetrofitInstance
+import ru.yandex.buggyweatherapp.data.model.Location
+import ru.yandex.buggyweatherapp.data.model.WeatherData
+import ru.yandex.buggyweatherapp.ui.api.WeatherRepository
 
-class WeatherRepository {
-
+class WeatherRepositoryImpl: WeatherRepository {
 
     private val weatherApi = RetrofitInstance.weatherApi
 
-
-    private var cachedWeatherData: WeatherData? = null
-
-
-    fun getWeatherData(location: Location, callback: (WeatherData?, Exception?) -> Unit) {
+    override fun getWeatherData(location: Location, callback: (WeatherData?, Exception?) -> Unit) {
         weatherApi.getCurrentWeather(location.latitude, location.longitude).enqueue(
             object : Callback<JsonObject> {
                 override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
                     if (response.isSuccessful && response.body() != null) {
                         try {
                             val weatherData = parseWeatherData(response.body()!!, location)
-                            cachedWeatherData = weatherData
                             callback(weatherData, null)
                         } catch (e: Exception) {
                             callback(null, e)
@@ -41,7 +36,7 @@ class WeatherRepository {
         )
     }
 
-    fun getWeatherByCity(cityName: String, callback: (WeatherData?, Exception?) -> Unit) {
+    override fun getWeatherByCity(cityName: String, callback: (WeatherData?, Exception?) -> Unit) {
         weatherApi.getWeatherByCity(cityName).enqueue(object : Callback<JsonObject> {
             override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
                 if (response.isSuccessful && response.body() != null) {

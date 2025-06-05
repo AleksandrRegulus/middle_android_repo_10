@@ -1,4 +1,4 @@
-package ru.yandex.buggyweatherapp.viewmodel
+package ru.yandex.buggyweatherapp.ui.viewmodel
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -10,9 +10,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.yandex.buggyweatherapp.model.Location
-import ru.yandex.buggyweatherapp.repository.LocationRepository
-import ru.yandex.buggyweatherapp.repository.WeatherRepository
+import ru.yandex.buggyweatherapp.data.model.Location
+import ru.yandex.buggyweatherapp.data.repository.LocationRepositoryImpl
+import ru.yandex.buggyweatherapp.data.repository.WeatherRepositoryImpl
+import ru.yandex.buggyweatherapp.ui.api.LocationRepository
+import ru.yandex.buggyweatherapp.ui.api.WeatherRepository
 import ru.yandex.buggyweatherapp.utils.ImageLoader
 
 class WeatherViewModel : ViewModel() {
@@ -21,9 +23,9 @@ class WeatherViewModel : ViewModel() {
     private lateinit var activityContext: Context
 
 
-    private val weatherRepository = WeatherRepository()
-    private val locationRepository by lazy {
-        LocationRepository(activityContext)
+    private val weatherRepository: WeatherRepository = WeatherRepositoryImpl()
+    private val locationRepository: LocationRepository by lazy {
+        LocationRepositoryImpl(activityContext)
     }
 
     private val _weatherScreenState = MutableStateFlow<WeatherState>(WeatherState.Start)

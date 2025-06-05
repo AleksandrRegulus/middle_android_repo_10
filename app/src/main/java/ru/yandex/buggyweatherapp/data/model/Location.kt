@@ -1,4 +1,4 @@
-package ru.yandex.buggyweatherapp.model
+package ru.yandex.buggyweatherapp.data.model
 
 data class Location(
     val latitude: Double,

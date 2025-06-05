@@ -27,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,10 +35,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import ru.yandex.buggyweatherapp.model.WeatherData
+import ru.yandex.buggyweatherapp.data.model.WeatherData
+import ru.yandex.buggyweatherapp.ui.viewmodel.WeatherState
+import ru.yandex.buggyweatherapp.ui.viewmodel.WeatherViewModel
 import ru.yandex.buggyweatherapp.utils.WeatherIconMapper
-import ru.yandex.buggyweatherapp.viewmodel.WeatherState
-import ru.yandex.buggyweatherapp.viewmodel.WeatherViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

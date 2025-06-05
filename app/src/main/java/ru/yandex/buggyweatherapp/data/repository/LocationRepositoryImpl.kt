@@ -1,4 +1,4 @@
-package ru.yandex.buggyweatherapp.repository
+package ru.yandex.buggyweatherapp.data.repository
 
 import android.content.Context
 import android.location.Geocoder
@@ -10,20 +10,19 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import ru.yandex.buggyweatherapp.model.Location
+import ru.yandex.buggyweatherapp.data.model.Location
+import ru.yandex.buggyweatherapp.ui.api.LocationRepository
 import ru.yandex.buggyweatherapp.utils.LocationTracker
 import java.util.Locale
 
-class LocationRepository(
-    
+class LocationRepositoryImpl(
     private val context: Context
-) {
+): LocationRepository {
     
     private val fusedLocationClient: FusedLocationProviderClient = 
         LocationServices.getFusedLocationProviderClient(context)
-    
-    
-    fun getCurrentLocation(callback: (Location?) -> Unit) {
+
+    override fun getCurrentLocation(callback: (Location?) -> Unit) {
         try {
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location ->
@@ -63,13 +62,10 @@ class LocationRepository(
                             longitude = location.longitude
                         )
                         callback(userLocation)
-                        
-                        
                     }
                 }
             }
-            
-            
+
             fusedLocationClient.requestLocationUpdates(
                 locationRequest,
                 locationCallback,
@@ -82,14 +78,14 @@ class LocationRepository(
     }
     
     
-    fun getCityNameFromLocation(location: Location): String? {
+    override fun getCityNameFromLocation(location: Location): String? {
         try {
-            
+
             val geocoder = Geocoder(context, Locale.getDefault())
-            
+
             @Suppress("DEPRECATION")
             val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-            
+
             return if (!addresses.isNullOrEmpty()) {
                 val address = addresses[0]
                 if (address.locality != null) {
@@ -107,9 +103,9 @@ class LocationRepository(
             return null
         }
     }
-    
-    
-    fun startLocationTracking() {
+
+
+    override fun startLocationTracking() {
         LocationTracker.getInstance(context).startTracking()
     }
     
