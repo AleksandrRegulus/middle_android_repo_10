@@ -1,16 +1,16 @@
 package ru.yandex.buggyweatherapp.viewmodel
 
 import android.content.Context
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.yandex.buggyweatherapp.model.Location
-import ru.yandex.buggyweatherapp.model.WeatherData
 import ru.yandex.buggyweatherapp.repository.LocationRepository
 import ru.yandex.buggyweatherapp.repository.WeatherRepository
 import ru.yandex.buggyweatherapp.utils.ImageLoader
@@ -29,7 +29,6 @@ class WeatherViewModel : ViewModel() {
     private val _weatherScreenState = MutableStateFlow<WeatherState>(WeatherState.Start)
     val weatherScreenState: StateFlow<WeatherState> = _weatherScreenState
 
-    private val weatherData = MutableLiveData<WeatherData?>()
     private var currentLocation: Location? = null
 
     fun initialize(context: Context) {
@@ -41,12 +40,14 @@ class WeatherViewModel : ViewModel() {
     private fun fetchCurrentLocationWeather() {
         renderState(WeatherState.Loading)
 
-        locationRepository.getCurrentLocation { location ->
-            if (location != null) {
-                currentLocation = location
-                getWeatherForLocation(location)
-            } else {
-                renderState(WeatherState.Error("Unable to get current location"))
+        viewModelScope.launch(Dispatchers.IO) {
+            locationRepository.getCurrentLocation { location ->
+                if (location != null) {
+                    currentLocation = location
+                    getWeatherForLocation(location)
+                } else {
+                    renderState(WeatherState.Error("Unable to get current location"))
+                }
             }
         }
     }
@@ -54,12 +55,13 @@ class WeatherViewModel : ViewModel() {
     private fun getWeatherForLocation(location: Location) {
         renderState(WeatherState.Loading)
 
-        weatherRepository.getWeatherData(location) { data, exception ->
-
-            if (data != null) {
-                renderState(WeatherState.Content(data))
-            } else {
-                renderState(WeatherState.Error(exception?.message ?: "Unknown error"))
+        viewModelScope.launch(Dispatchers.IO) {
+            weatherRepository.getWeatherData(location) { data, exception ->
+                if (data != null) {
+                    renderState(WeatherState.Content(data))
+                } else {
+                    renderState(WeatherState.Error(exception?.message ?: "Unknown error"))
+                }
             }
         }
     }
@@ -72,12 +74,14 @@ class WeatherViewModel : ViewModel() {
         }
         renderState(WeatherState.Loading)
 
-        weatherRepository.getWeatherByCity(city) { data, exception ->
-            if (data != null) {
-                renderState(WeatherState.Content(data))
-                currentLocation = Location(0.0, 0.0, data.cityName)
-            } else {
-                renderState(WeatherState.Error(exception?.message ?: "Unknown error"))
+        viewModelScope.launch(Dispatchers.IO) {
+            weatherRepository.getWeatherByCity(city) { data, exception ->
+                if (data != null) {
+                    renderState(WeatherState.Content(data))
+                    currentLocation = Location(0.0, 0.0, data.cityName)
+                } else {
+                    renderState(WeatherState.Error(exception?.message ?: "Unknown error"))
+                }
             }
         }
     }
@@ -113,10 +117,15 @@ class WeatherViewModel : ViewModel() {
 
 
     fun toggleFavorite() {
-        weatherData.value?.let {
-            it.isFavorite = !it.isFavorite
-
-            weatherData.value = it
+        if (_weatherScreenState.value is WeatherState.Content) {
+            val state = _weatherScreenState.value as WeatherState.Content
+            renderState(
+                WeatherState.Content(
+                    state.weatherData.copy(
+                        isFavorite = !state.weatherData.isFavorite
+                    )
+                )
+            )
         }
     }
 
@@ -127,7 +136,7 @@ class WeatherViewModel : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-
+        viewModelScope.coroutineContext.cancelChildren()
     }
 
     companion object {
