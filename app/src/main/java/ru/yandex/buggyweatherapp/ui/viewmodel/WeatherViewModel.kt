@@ -1,8 +1,8 @@
 package ru.yandex.buggyweatherapp.ui.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
@@ -11,30 +11,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.yandex.buggyweatherapp.data.model.Location
-import ru.yandex.buggyweatherapp.data.repository.LocationRepositoryImpl
-import ru.yandex.buggyweatherapp.data.repository.WeatherRepositoryImpl
 import ru.yandex.buggyweatherapp.ui.api.LocationRepository
 import ru.yandex.buggyweatherapp.ui.api.WeatherRepository
 import ru.yandex.buggyweatherapp.utils.ImageLoader
+import javax.inject.Inject
 
-class WeatherViewModel : ViewModel() {
-
-
-    private lateinit var activityContext: Context
-
-
-    private val weatherRepository: WeatherRepository = WeatherRepositoryImpl()
-    private val locationRepository: LocationRepository by lazy {
-        LocationRepositoryImpl(activityContext)
-    }
+@HiltViewModel
+class WeatherViewModel @Inject constructor(
+    private val weatherRepository: WeatherRepository,
+    private val locationRepository: LocationRepository
+) : ViewModel() {
 
     private val _weatherScreenState = MutableStateFlow<WeatherState>(WeatherState.Start)
     val weatherScreenState: StateFlow<WeatherState> = _weatherScreenState
 
     private var currentLocation: Location? = null
 
-    fun initialize(context: Context) {
-        this.activityContext = context
+    init {
         fetchCurrentLocationWeather()
         startAutoRefresh()
     }

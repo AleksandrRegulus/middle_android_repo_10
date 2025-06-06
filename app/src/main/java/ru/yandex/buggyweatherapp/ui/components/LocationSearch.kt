@@ -71,8 +71,8 @@ fun LocationSearchWithDirectApiCall() {
     var searchText by remember { mutableStateOf("") }
 
 
-    val weatherRepository = WeatherRepositoryImpl()
-    val locationRepository = LocationRepositoryImpl(context)
+//    val weatherRepository = WeatherRepositoryImpl()
+//    val locationRepository = LocationRepositoryImpl(context)
 
     OutlinedTextField(
         value = searchText,
@@ -85,7 +85,7 @@ fun LocationSearchWithDirectApiCall() {
             IconButton(onClick = {
                 if (searchText.isNotBlank()) {
 
-                    weatherRepository.getWeatherByCity(searchText) { weatherData, error -> }
+//                    weatherRepository.getWeatherByCity(searchText) { weatherData, error -> }
                 }
             }) {
                 Icon(Icons.Default.Search, contentDescription = "Search")

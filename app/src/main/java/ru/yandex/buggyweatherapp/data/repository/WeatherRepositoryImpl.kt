@@ -4,14 +4,15 @@ import com.google.gson.JsonObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import ru.yandex.buggyweatherapp.data.api.RetrofitInstance
+import ru.yandex.buggyweatherapp.data.api.WeatherApiService
 import ru.yandex.buggyweatherapp.data.model.Location
 import ru.yandex.buggyweatherapp.data.model.WeatherData
 import ru.yandex.buggyweatherapp.ui.api.WeatherRepository
+import javax.inject.Inject
 
-class WeatherRepositoryImpl : WeatherRepository {
-
-    private val weatherApi = RetrofitInstance.weatherApi
+class WeatherRepositoryImpl @Inject constructor (
+    private val weatherApi: WeatherApiService
+) : WeatherRepository {
 
     override fun getWeatherData(location: Location, callback: (WeatherData?, Exception?) -> Unit) {
         weatherApi.getCurrentWeather(location.latitude, location.longitude)

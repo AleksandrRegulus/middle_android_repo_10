@@ -44,20 +44,7 @@ import ru.yandex.buggyweatherapp.utils.WeatherIconMapper
 @Composable
 fun WeatherScreen(viewModel: WeatherViewModel, modifier: Modifier = Modifier) {
 
-    val context = LocalContext.current
-
-
-    DisposableEffect(Unit) {
-
-        viewModel.initialize(context)
-
-        onDispose {
-
-        }
-    }
-
     val state by viewModel.weatherScreenState.collectAsState()
-
     var searchText by remember { mutableStateOf("") }
 
     Column(
