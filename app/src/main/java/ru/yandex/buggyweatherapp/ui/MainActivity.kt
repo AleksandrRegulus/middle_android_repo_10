@@ -19,7 +19,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import ru.yandex.buggyweatherapp.ui.screens.WeatherScreen
 import ru.yandex.buggyweatherapp.ui.theme.BuggyWeatherAppTheme
-import ru.yandex.buggyweatherapp.ui.viewmodel.WeatherViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
