@@ -1,4 +1,4 @@
-package ru.yandex.buggyweatherapp.model
+package ru.yandex.buggyweatherapp.data.model
 
 data class Location(
     val latitude: Double,
@@ -15,10 +15,5 @@ data class Location(
         }
         return result
     }
-    
-    
-    override fun equals(other: Any?): Boolean {
-        if (other !is Location) return false
-        return latitude == other.latitude && longitude == other.longitude
-    }
+
 }
